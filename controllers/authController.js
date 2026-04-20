@@ -1,7 +1,5 @@
-const express=require('express');
 const bcrypt=require("bcryptjs");
 const User = require('../model/User');
-const jwt=require('jsonwebtoken');
 const mongoose=require('mongoose');
 const {generateToken}=require('../utils/jwtService');
 exports.registerUser=async(req,res)=>{
@@ -43,7 +41,6 @@ exports.registerUser=async(req,res)=>{
     user:{
       name:user.name,
       email:user.email,
-      password:user.password,
       role:user.role
     }
    })
@@ -104,10 +101,20 @@ exports.loginUser=async(req,res)=>{
 };
 exports.getUser=async(req,res)=>{
   try{
-    const users=await User.find().select("-password");
+    const page=parseInt(req.query.page)||1;
+    const limit=parseInt(req.query.limit)||10;
+    const skip=(page-1)*limit;
+    const users=await User.find()
+    .select("-password")
+    .skip(skip)
+    .limit(limit);
+    const totalUser=await User.countDocuments();
     res.status(200).json({
       message:"User fetched successfully",
-      count:users.length,
+      page,
+      limit,
+      totalUser,
+      totalPages: Math.ceil(totalUsers / limit),
       users
     });
   }catch(error){

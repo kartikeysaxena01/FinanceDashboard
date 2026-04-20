@@ -32,41 +32,68 @@ exports.getSummary=async(req,res)=>{
         })
     }
 }
-exports.getCategorySummary=async(req,res)=>{
-    try{
-        const summary=await Record.aggregate([
+exports.getCategorySummary = async (req, res) => {
+    try {
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+
+        const skip = (page - 1) * limit;
+
+        const summary = await Record.aggregate([
             {
-                $group:{
-                    _id:"$category",
-                    totalAmount:{$sum:"$amount"}
+                $group: {
+                    _id: "$category",
+                    totalAmount: { $sum: "$amount" }
                 }
             },
             {
-                $sort:{totalAmount:-1}
+                $sort: { totalAmount: -1 }
+            },
+            {
+                $skip: skip
+            },
+            {
+                $limit: limit
             }
-        ])
+        ]);
+
         return res.status(200).json({
-            success:true,
+            success: true,
+            page,
+            limit,
             summary
         });
-    }catch(error){
+
+    } catch (error) {
+
         return res.status(500).json({
-            sucess:false,
-            message:"Server Error"
-        })
+            success: false,
+            message: "Server Error"
+        });
+
     }
-}
+};
 exports.getRecentActivity=async(req,res)=>{
     try{
+        const page=parseInt(req.query.page)||1;
+        const limit=parseInt(req.query.limit)||10;
+        const skip=(page-1)*limit;
+        const totalRecords=await Record.countDocuments();
         const records=await Record.find()
         .sort({createdAt:-1})
-        .limit(1)
+        .skip(skip)
+        .limit(limit)
         .populate("createdBy","name email");
 
         return res.status(200).json({
-            success:true,
+            success: true,
+            page,
+            limit,
+            totalRecords,
+            totalPages: Math.ceil(totalRecords / limit),
             records
-        })
+        });
     }catch(error){
         return res.status(500).json({
             success:false,
