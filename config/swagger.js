@@ -1,4 +1,5 @@
 const swaggerJsdoc = require("swagger-jsdoc");
+const path = require("path");
 
 const options = {
   definition: {
@@ -10,7 +11,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:5000"
+        url: "https://financedashboard-5-emjj.onrender.com"
       }
     ],
     components: {
@@ -24,7 +25,8 @@ const options = {
     }
   },
 
-  apis: ["./routes/*.js"]
+  // ✅ FIXED PATH
+  apis: [path.join(__dirname, "../routes/*.js")]
 };
 
 const swaggerSpec = swaggerJsdoc(options);
